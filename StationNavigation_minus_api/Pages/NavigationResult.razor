@@ -1,0 +1,394 @@
+@page "/result"
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.WebUtilities
+
+<PageTitle>길찾기 결과 - 대전역 길찾기</PageTitle>
+
+<div class="result-container">
+    <div class="result-header">
+        <button class="back-btn" @onclick="GoBack">
+            ← 뒤로
+        </button>
+        <h1>길찾기 결과</h1>
+        <div class="route-info">
+            <span class="route-text">@GetLocationName(departureId) → @GetLocationName(arrivalId)</span>
+        </div>
+    </div>
+
+    <div class="result-content">
+        <div class="map-section">
+            <div class="map-container">
+                @if (HasRouteImage())
+                {
+                    <img src="@GetRouteImagePath()" alt="길찾기 경로" class="route-image" />
+                }
+                else
+                {
+                    <div class="no-image-placeholder">
+                        <div class="placeholder-content">
+                            <h3>@GetLocationName(departureId)</h3>
+                            <div class="arrow">↓</div>
+                            <h3>@GetLocationName(arrivalId)</h3>
+                        </div>
+                        <p class="placeholder-text">경로 이미지 준비중입니다</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="route-details">
+            <h3>경로 안내</h3>
+            <div class="route-steps">
+                @foreach (var step in GetRouteSteps())
+                {
+                    <div class="step-item">
+                        <span class="step-number">@step.Number</span>
+                        <span class="step-text">@step.Description</span>
+                    </div>
+                }
+            </div>
+
+            <div class="route-info-box">
+                <div class="info-item">
+                    <span class="info-label">예상 소요시간</span>
+                    <span class="info-value">@GetEstimatedTime()</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">예상 거리</span>
+                    <span class="info-value">@GetEstimatedDistance()</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-primary" @onclick="StartNewRoute">새 경로 찾기</button>
+            <button class="btn-secondary" @onclick="GoHome">처음으로</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .result-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .result-header {
+        padding: 20px;
+        color: white;
+        text-align: center;
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .result-header h1 {
+        font-size: 2rem;
+        margin: 0 0 15px 0;
+        font-weight: 700;
+    }
+
+    .route-info {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 12px 25px;
+        border-radius: 25px;
+        display: inline-block;
+    }
+
+    .route-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .result-content {
+        padding: 0 20px 20px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .map-section {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .map-container {
+        width: 100%;
+        min-height: 400px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .route-image {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+    }
+
+    .no-image-placeholder {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+
+    .placeholder-content h3 {
+        font-size: 1.5rem;
+        margin: 15px 0;
+        color: #333;
+    }
+
+    .arrow {
+        font-size: 2rem;
+        color: #4CAF50;
+        margin: 20px 0;
+    }
+
+    .placeholder-text {
+        margin-top: 30px;
+        font-style: italic;
+        opacity: 0.7;
+    }
+
+    .route-details {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .route-details h3 {
+        margin-bottom: 20px;
+        color: #333;
+        font-size: 1.3rem;
+    }
+
+    .route-steps {
+        margin-bottom: 25px;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .step-number {
+        background: #4CAF50;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .step-text {
+        flex: 1;
+        color: #333;
+    }
+
+    .route-info-box {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .info-item {
+        text-align: center;
+    }
+
+    .info-label {
+        display: block;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        display: block;
+        color: #333;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #45a049;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background: white;
+        transform: translateY(-2px);
+    }
+
+    /* 모바일 반응형 */
+    @@media (max-width: 768px) {
+        .route-info-box {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn-primary, .btn-secondary {
+            width: 200px;
+        }
+    }
+</style>
+
+@code {
+    private int departureId = 0;
+    private int arrivalId = 0;
+
+    public class RouteStep
+    {
+        public int Number { get; set; }
+        public string Description { get; set; } = "";
+    }
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        
+        if (query.TryGetValue("departure", out var depParam))
+            int.TryParse(depParam, out departureId);
+            
+        if (query.TryGetValue("arrival", out var arrParam))
+            int.TryParse(arrParam, out arrivalId);
+    }
+
+    private string GetLocationName(int id)
+    {
+        return id switch
+        {
+            1 => "화장실",
+            2 => "대합실",
+            3 => "매표소",
+            4 => "물품보관소",
+            5 => "성심당",
+            6 => "스타벅스",
+            7 => "편의점",
+            8 => "맥도날드",
+            9 => "1번 출구",
+            10 => "2번 출구",
+            11 => "정면 출구",
+            12 => "서쪽 출구",
+            _ => "알 수 없음"
+        };
+    }
+
+    private bool HasRouteImage()
+    {
+        // 실제 환경에서는 이미지 파일 존재 여부를 확인
+        return false; // 현재는 모든 경우에 플레이스홀더 표시
+    }
+
+    private string GetRouteImagePath()
+    {
+        return $"/images/routes/route_{departureId}_{arrivalId}.png";
+    }
+
+    private List<RouteStep> GetRouteSteps()
+    {
+        // 실제로는 데이터베이스나 설정 파일에서 가져올 데이터
+        return new List<RouteStep>
+        {
+            new RouteStep { Number = 1, Description = $"{GetLocationName(departureId)}에서 출발합니다" },
+            new RouteStep { Number = 2, Description = "중앙 대합실 방향으로 이동하세요" },
+            new RouteStep { Number = 3, Description = "안내판을 따라 직진하세요" },
+            new RouteStep { Number = 4, Description = $"{GetLocationName(arrivalId)}에 도착합니다" }
+        };
+    }
+
+    private string GetEstimatedTime()
+    {
+        // 간단한 시간 계산 로직
+        var random = new Random(departureId + arrivalId);
+        var minutes = random.Next(2, 8);
+        return $"{minutes}분";
+    }
+
+    private string GetEstimatedDistance()
+    {
+        // 간단한 거리 계산 로직
+        var random = new Random(departureId + arrivalId);
+        var distance = random.Next(50, 300);
+        return $"{distance}m";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo($"/arrival?departure={departureId}");
+    }
+
+    private void StartNewRoute()
+    {
+        Navigation.NavigateTo("/departure");
+    }
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/language");
+    }
+}

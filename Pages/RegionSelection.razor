@@ -1,0 +1,341 @@
+@page "/region"
+@inject NavigationManager Navigation
+
+<PageTitle>지역 선택 - 대전역 길찾기</PageTitle>
+
+<div class="region-container">
+    <div class="region-header">
+        <button class="back-btn" @onclick="GoBack">
+            ← 뒤로
+        </button>
+        <h1>지역을 선택해 주세요</h1>
+    </div>
+
+    <div class="region-content">
+        <div class="region-list">
+            <div class="region-item">
+                <h3 @onclick="() => ToggleRegion(1)" class="region-title @(selectedRegion == 1 ? "active" : "")">
+                    서울특별시 
+                    <span class="toggle-icon">@(selectedRegion == 1 ? "▼" : "▶")</span>
+                </h3>
+                @if (selectedRegion == 1)
+                {
+                    <div class="station-list">
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">서울역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">강남역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">홍대입구역</button>
+                    </div>
+                }
+            </div>
+
+            <div class="region-item">
+                <h3 @onclick="() => ToggleRegion(2)" class="region-title @(selectedRegion == 2 ? "active" : "")">
+                    경기도 
+                    <span class="toggle-icon">@(selectedRegion == 2 ? "▼" : "▶")</span>
+                </h3>
+                @if (selectedRegion == 2)
+                {
+                    <div class="station-list">
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">수원역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">분당역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">일산역</button>
+                    </div>
+                }
+            </div>
+
+            <div class="region-item">
+                <h3 @onclick="() => ToggleRegion(3)" class="region-title @(selectedRegion == 3 ? "active" : "")">
+                    충남/대전 
+                    <span class="toggle-icon">@(selectedRegion == 3 ? "▼" : "▶")</span>
+                </h3>
+                @if (selectedRegion == 3)
+                {
+                    <div class="station-list">
+                        <button class="station-btn active" @onclick="SelectDaejeonStation">
+                            대전역
+                            <span class="available-badge">이용 가능</span>
+                        </button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">서대전역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">천안역</button>
+                    </div>
+                }
+            </div>
+
+            <div class="region-item">
+                <h3 @onclick="() => ToggleRegion(4)" class="region-title @(selectedRegion == 4 ? "active" : "")">
+                    부산광역시 
+                    <span class="toggle-icon">@(selectedRegion == 4 ? "▼" : "▶")</span>
+                </h3>
+                @if (selectedRegion == 4)
+                {
+                    <div class="station-list">
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">부산역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">서면역</button>
+                        <button class="station-btn disabled" @onclick="ShowComingSoon">해운대역</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showComingSoon)
+    {
+        <div class="coming-soon-modal" @onclick="HideComingSoon">
+            <div class="modal-content" @onclick:stopPropagation="true">
+                <h3>서비스 준비중</h3>
+                <p>해당 역은 준비중입니다.<br/>현재는 <strong>대전역</strong>만 지원됩니다.</p>
+                <button class="modal-close-btn" @onclick="HideComingSoon">확인</button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .region-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .region-header {
+        padding: 20px;
+        color: white;
+        position: relative;
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .region-header h1 {
+        font-size: 2rem;
+        margin: 0;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .region-content {
+        padding: 0 20px 20px;
+    }
+
+    .region-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .region-item {
+        background: rgba(255, 255, 255, 0.95);
+        margin-bottom: 15px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .region-title {
+        padding: 20px;
+        margin: 0;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        transition: background-color 0.3s ease;
+        user-select: none;
+    }
+
+    .region-title:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .region-title.active {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+    }
+
+    .toggle-icon {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .station-list {
+        padding: 0 20px 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .station-btn {
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .station-btn:hover:not(.disabled) {
+        border-color: #4CAF50;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .station-btn.active {
+        border-color: #4CAF50;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+    }
+
+    .station-btn.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #f5f5f5;
+        color: #999;
+    }
+
+    .available-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 400;
+    }
+
+    .coming-soon-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 400px;
+        margin: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+
+    .modal-content p {
+        color: #666;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
+    .modal-close-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .modal-close-btn:hover {
+        background: #45a049;
+    }
+
+    /* 모바일 반응형 */
+    @@media (max-width: 768px) {
+        .region-header h1 {
+            font-size: 1.7rem;
+        }
+
+        .station-list {
+            grid-template-columns: 1fr;
+        }
+
+        .region-title {
+            font-size: 1.1rem;
+            padding: 15px;
+        }
+
+        .station-btn {
+            padding: 12px 15px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .region-container {
+            padding: 0;
+        }
+
+        .region-header {
+            padding: 15px;
+        }
+
+        .region-content {
+            padding: 0 15px 15px;
+        }
+
+        .region-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+@code {
+    private int selectedRegion = 1;
+    private bool showComingSoon = false;
+
+    private void ToggleRegion(int regionId)
+    {
+        selectedRegion = selectedRegion == regionId ? 0 : regionId;
+    }
+
+    private void SelectDaejeonStation()
+    {
+        // 대전역 선택 시 출발지 선택 페이지로 이동
+        Navigation.NavigateTo("/station-info/1");
+    }
+
+    private void ShowComingSoon()
+    {
+        showComingSoon = true;
+    }
+
+    private void HideComingSoon()
+    {
+        showComingSoon = false;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/language");
+    }
+}

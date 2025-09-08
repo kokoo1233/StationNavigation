@@ -1,0 +1,243 @@
+@page "/language"
+@inject NavigationManager Navigation
+
+<PageTitle>언어 선택 - 대전역 길찾기</PageTitle>
+
+<div class="language-container">
+    <div class="language-header">
+        <h1>언어를 선택해 주세요</h1>
+        <h2>Please select your language</h2>
+    </div>
+
+    <div class="language-buttons">
+        <button class="language-btn active" @onclick="SelectKorean">
+            <span class="language-text">한국어</span>
+            <span class="language-subtext">Korean</span>
+        </button>
+
+        <button class="language-btn disabled" @onclick="ShowComingSoon">
+            <span class="language-text">English</span>
+            <span class="language-subtext">영어</span>
+        </button>
+
+        <button class="language-btn disabled" @onclick="ShowComingSoon">
+            <span class="language-text">日本語</span>
+            <span class="language-subtext">일본어</span>
+        </button>
+
+        <button class="language-btn disabled" @onclick="ShowComingSoon">
+            <span class="language-text">中文</span>
+            <span class="language-subtext">중국어</span>
+        </button>
+    </div>
+
+    @if (showComingSoon)
+    {
+        <div class="coming-soon-modal" @onclick="HideComingSoon">
+            <div class="modal-content" @onclick:stopPropagation="true">
+                <h3>서비스 준비중</h3>
+                <p>해당 언어는 준비중입니다.<br/>현재는 한국어만 지원됩니다.</p>
+                <button class="modal-close-btn" @onclick="HideComingSoon">확인</button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .language-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .language-header {
+        text-align: center;
+        margin-bottom: 50px;
+        color: white;
+    }
+
+    .language-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .language-header h2 {
+        font-size: 1.2rem;
+        font-weight: 300;
+        opacity: 0.9;
+    }
+
+    .language-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .language-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        min-height: 150px;
+        justify-content: center;
+    }
+
+    .language-btn:hover:not(.disabled) {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    .language-btn.active {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+    }
+
+    .language-btn.active:hover {
+        background: linear-gradient(135deg, #45a049, #3d8b40);
+    }
+
+    .language-btn.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+    .flag-icon {
+        width: 40px;
+        height: 30px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .language-text {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .language-subtext {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .coming-soon-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 400px;
+        margin: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+
+    .modal-content p {
+        color: #666;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
+    .modal-close-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .modal-close-btn:hover {
+        background: #45a049;
+    }
+
+    /* 모바일 반응형 */
+    @@media (max-width: 768px) {
+        .language-buttons {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .language-header h1 {
+            font-size: 2rem;
+        }
+
+        .language-btn {
+            padding: 25px 15px;
+            min-height: 120px;
+        }
+
+        .language-text {
+            font-size: 1.2rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .language-container {
+            padding: 15px;
+        }
+
+        .language-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .language-header h2 {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private bool showComingSoon = false;
+
+    private void SelectKorean()
+    {
+        // 한국어 선택 시 지역 선택 페이지로 이동
+        Navigation.NavigateTo("/region");
+    }
+
+    private void ShowComingSoon()
+    {
+        showComingSoon = true;
+    }
+
+    private void HideComingSoon()
+    {
+        showComingSoon = false;
+    }
+}

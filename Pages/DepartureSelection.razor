@@ -1,0 +1,313 @@
+@page "/departure"
+@inject NavigationManager Navigation
+@inject ILocationService LocationService
+@using StationNavigation.Models
+@using StationNavigation.Services
+
+<PageTitle>출발지 선택 - 대전역 길찾기</PageTitle>
+
+<div class="departure-container">
+    <div class="departure-header">
+        <button class="back-btn" @onclick="GoBack">
+            ← 뒤로
+        </button>
+        
+        <p class="station-info">대전역 내 시설</p>
+        <h1>출발지를 선택해 주세요</h1>
+        <!-- 👇 '출발지: ...'를 표시하는 불필요한 코드를 삭제하여 오류를 해결했습니다. -->
+    </div>
+
+<div class="category-list">
+    @if (isLoading)
+    {
+        <div class="loading-message">데이터를 불러오는 중...</div>
+    }
+    else if (categorizedLocations.Any())
+    {
+        @foreach (var category in categorizedLocations.OrderBy(c => GetCategoryOrder(int.Parse(c.Key))))
+        {
+            <div class="category-item">
+                <h3 @onclick="() => ToggleCategory(int.Parse(category.Key))" 
+                    class="category-title @(selectedCategory == int.Parse(category.Key) ? "active" : "")">
+                    @GetCategoryName(category.Key)
+                    <span class="toggle-icon">@(selectedCategory == int.Parse(category.Key) ? "▼" : "▶")</span>
+                </h3>
+                @if (selectedCategory == int.Parse(category.Key))
+                {
+                    <div class="location-list">
+                        @foreach (var location in category.Value)
+                        {
+                            <button class="location-btn @(IsPopularLocation(location.Name) ? "popular" : "")" 
+                                    @onclick="() => SelectLocation(location.Id)">
+                                @location.Name
+                                @if (IsPopularLocation(location.Name))
+                                {
+                                    <span class="popular-badge">인기</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-data-message">등록된 위치가 없습니다.</div>
+    }
+</div>
+</div>
+
+<style>
+    .departure-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .departure-header {
+        position: relative; /* 자식 요소인 back-btn의 기준점 */
+        padding: 20px;
+        /* back-btn을 위한 공간을 확보하고 헤더 콘텐츠를 중앙에 유지합니다. */
+        padding-top: 60px; 
+        color: white;
+        text-align: center;
+    }
+
+    .back-btn {
+        position: absolute; /* header를 기준으로 위치 지정 */
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        /* 버튼 크기를 더 작고 세련되게 수정했습니다. */
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* SVG 아이콘 크기 조정 */
+    .back-btn svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    
+    .back-btn span {
+        margin-left: 4px;
+    }
+
+    .departure-header h1 {
+        font-size: 2rem;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .station-info {
+        /* 글자 크기와 굵기를 더 키워서 잘 보이도록 수정했습니다. */
+        font-size: 1.4rem; 
+        font-weight: 600;
+        opacity: 0.9;
+        margin: 0 0 10px 0; /* 제목과의 간격 조정 */
+    }
+
+    .category-list {
+        padding: 0 20px 20px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .category-item {
+        background: rgba(255, 255, 255, 0.95);
+        margin-bottom: 15px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-title {
+        padding: 20px;
+        margin: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        transition: background-color 0.3s ease;
+        user-select: none;
+    }
+
+    .category-title:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .category-title.active {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+    }
+
+    .toggle-icon {
+        font-size: 1rem;
+    }
+
+    .location-list {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .location-btn {
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .location-btn:hover {
+        border-color: #4CAF50;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        background: #f8fff8;
+    }
+
+    .location-btn.popular {
+        border-color: #ff9800;
+        background: linear-gradient(135deg, #fff3e0, #ffffff);
+    }
+
+    .popular-badge {
+        background: #ff9800;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .loading-message, .no-data-message {
+        text-align: center;
+        padding: 40px;
+        color: white;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        margin: 20px;
+    }
+
+    @@media (max-width: 768px) {
+        .location-list {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private Dictionary<string, List<Location>> categorizedLocations = new();
+    private int selectedCategory = 1;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocationsAsync();
+    }
+
+    private async Task LoadLocationsAsync()
+    {
+        try
+        {
+            isLoading = true;
+	    categorizedLocations.Clear();
+            
+            // 모든 카테고리 가져오기
+            var allLocations = await LocationService.GetAllActiveLocationsAsync();
+
+	    categorizedLocations = allLocations
+            .GroupBy(location => location.CategoryId)
+            .ToDictionary(group => group.Key.ToString(), group => group.ToList());
+
+
+
+            // 첫 번째 카테고리를 기본으로 선택
+            if (categorizedLocations.Any())
+            {
+                selectedCategory = 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            // 에러 처리 - 실제 환경에서는 로깅 필요
+            Console.WriteLine($"데이터 로드 실패: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleCategory(int categoryId)
+    {
+        selectedCategory = selectedCategory == categoryId ? 0 : categoryId;
+    }
+
+    private void SelectLocation(int locationId)
+    {
+        Navigation.NavigateTo($"/arrival?departure={locationId}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/region");
+    }
+
+    // 카테고리 순서 정의 (원하는 순서대로 표시)
+    private int GetCategoryOrder(int categoryId)
+    {
+        return categoryId switch
+        {
+            1 => 1, // 공공시설
+            2 => 2, // 가게
+            3 => 3, // 입/출구
+            _ => 99
+        };
+    }
+
+    private string GetCategoryName(string categoryKey)
+    {
+        // category.Key가 문자열(string)이므로 int로 변환해서 사용합니다.
+        // GetCategoryOrder 함수에 정의된 순서와 동일한 이름으로 맞춰주는 것이 좋습니다.
+        return int.Parse(categoryKey) switch
+        {
+            1 => "공공시설",
+            2 => "가게",
+            3 => "입/출구",
+            _ => "기타" // 알 수 없는 카테고리일 경우
+        };
+    }
+
+    // 인기 위치 판별 (DB에 인기도 필드가 없으므로 하드코딩, 나중에 DB 필드로 변경 가능)
+    private bool IsPopularLocation(string locationName)
+    {
+        var popularLocations = new[] { "성심당", "스타벅스" };
+        return popularLocations.Contains(locationName);
+    }
+}
