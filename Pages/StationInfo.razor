@@ -3,12 +3,13 @@
 @inject IStationInfoService StationInfoService
 @inject NavigationManager Navigation
 @using StationNavigation.Models
+@using Microsoft.AspNetCore.Components
 
 <PageTitle>역 정보 - 대전역</PageTitle>
 
 <div class="station-info-container">
     <div class="station-info-header">
-        <button class="back-btn" @onclick="GoBack">
+        <button class="unified-back-button" @onclick="GoBack">
             ← 뒤로
         </button>
         <h1>대전역 정보</h1>
@@ -26,7 +27,7 @@
                 @foreach (var floor in floors.OrderBy(f => f.DisplayOrder))
                 {
                     <button class="floor-btn @(selectedFloor?.Id == floor.Id ? "active" : "")" @onclick="() => SelectFloor(floor)">
-                        @floor.Id
+                        @floor.FloorName 
                     </button>
                 }
             </div>
@@ -47,14 +48,29 @@
                 @if (selectedFloor != null)
                 {
                     <h4>@selectedFloor.FloorName 주요 시설</h4>
-                    <div class="facility-list">
-                        @foreach (var facility in GetFacilitiesForSelectedFloor())
-                        {
-                            <button class="facility-item" @onclick="ShowDevelopmentAlert">
-                                @facility.Name
+                    
+                    @foreach (var facilityGroup in GetFacilitiesForSelectedFloor().GroupBy(f => f.FacilityType))
+                    {
+                        <div class="accordion-item">
+                            <button class="accordion-header @(IsOpen(facilityGroup.Key) ? "active" : "")" @onclick="() => ToggleAccordion(facilityGroup.Key)">
+                                <span>@facilityGroup.Key</span>
+                                <span class="caret">▼</span>
                             </button>
-                        }
-                    </div>
+                            @if(IsOpen(facilityGroup.Key))
+                            {
+                                <div class="accordion-content">
+                                    <div class="facility-list">
+                                         @foreach (var facility in facilityGroup)
+                                         {
+                                             <button class="facility-item" @onclick="ShowDevelopmentAlert">
+                                                 @facility.Name
+                                             </button>
+                                         }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
 
@@ -67,7 +83,7 @@
         </div>
     }
 
-    <!-- 평면도 개발 중 안내 모달 -->
+    <!-- 개발 중 안내 모달 -->
     @if (showDevelopmentAlert)
     {
         <div class="alert-modal" @onclick="HideDevelopmentAlert">
@@ -90,32 +106,27 @@
     }
 
     .station-info-header {
-        position: relative; /* 자식 요소의 위치 기준으로 설정 */
+        position: relative;
         padding: 20px;
         text-align: center;
-        height: 80px; /* 헤더 높이 고정 */
+        height: 80px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-
-    .back-btn {
-        position: absolute; /* 헤더의 왼쪽 상단에 독립적으로 위치 */
+    
+    .unified-back-button {
+        position: absolute;
+        top: 25px;
         left: 20px;
-        top: 50%;
-        transform: translateY(-50%); /* 세로 중앙 정렬 */
-        background: rgba(255, 255, 255, 0.2);
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.7);
         color: white;
-        border: none;
-        padding: 10px 15px;
+        padding: 8px 16px;
         border-radius: 20px;
         cursor: pointer;
         font-size: 1rem;
-        transition: background-color 0.3s ease;
-    }
-
-    .back-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
+        z-index: 10;
     }
 
     .station-info-header h1 {
@@ -199,9 +210,9 @@
     }
 
     .facility-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .facility-item {
@@ -246,6 +257,42 @@
         background: #45a049;
     }
 
+    /* 아코디언 스타일 */
+    .accordion-item {
+        margin-bottom: 5px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .accordion-header {
+        background: #4CAF50;
+        color: white;
+        padding: 15px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .accordion-header .caret {
+        transition: transform 0.3s ease;
+    }
+
+    .accordion-header.active .caret {
+        transform: rotate(180deg);
+    }
+
+    .accordion-content {
+        padding: 15px;
+        background-color: white;
+    }
+
     /* 모달 스타일 */
     .alert-modal {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -273,47 +320,71 @@
     private StationFloor? selectedFloor;
     private bool isLoading = true;
     private bool showDevelopmentAlert = false;
+    private HashSet<string> openAccordions = new();
 
     [Parameter]
     public int StationId { get; set; }
 
-protected override async Task OnInitializedAsync()
-{
-    isLoading = true;
-    try
+    protected override async Task OnInitializedAsync()
     {
-        floors = await StationInfoService.GetFloorsByStationIdAsync(StationId);
-        facilities = await StationInfoService.GetFacilitiesByStationIdAsync(StationId);
-        
-        if (floors.Any())
+        isLoading = true;
+        try
         {
-            selectedFloor = floors.OrderBy(f => f.FloorLevel).First();
+            floors = await StationInfoService.GetFloorsByStationIdAsync(StationId);
+            facilities = await StationInfoService.GetFacilitiesByStationIdAsync(StationId);
+            
+            if (floors.Any())
+            {
+                selectedFloor = floors.OrderBy(f => f.FloorLevel).First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"데이터 로딩 중 오류 발생: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"데이터 로딩 중 오류 발생: {ex.Message}");
-    }
-    finally
-    {
-        isLoading = false;
-    }
-}
 
-private async Task SelectFloor(StationFloor floor)
-{
-    selectedFloor = floor;
-}
-
-
-private List<StationFacility> GetFacilitiesForSelectedFloor()
-{
-    if (selectedFloor == null)
+    private async Task SelectFloor(StationFloor floor)
     {
-        return new List<StationFacility>();
+        selectedFloor = floor;
+        openAccordions.Clear(); // 다른 층 선택 시, 열려있던 아코디언 초기화
+        await InvokeAsync(StateHasChanged); // UI 즉시 업데이트
     }
-    return facilities.Where(f => f.FloorId == selectedFloor.Id).ToList();
-}
+
+    // '가게' 카테고리를 제외하고 필터링합니다.
+    private List<StationFacility> GetFacilitiesForSelectedFloor()
+    {
+        if (selectedFloor == null)
+        {
+            return new List<StationFacility>();
+        }
+        return facilities
+            .Where(f => f.FloorId == selectedFloor.Id && f.FacilityType != "가게")
+            .ToList();
+    }
+
+    // 한 번에 하나의 아코디언만 열리도록 수정된 로직
+    private void ToggleAccordion(string facilityType)
+    {
+        if (openAccordions.Contains(facilityType))
+        {
+            openAccordions.Remove(facilityType); // 이미 열려있으면 닫기
+        }
+        else
+        {
+            openAccordions.Clear(); // 다른 모든 아코디언을 닫고
+            openAccordions.Add(facilityType); // 현재 것만 열기
+        }
+    }
+
+    private bool IsOpen(string facilityType)
+    {
+        return openAccordions.Contains(facilityType);
+    }
 
     private void ShowDevelopmentAlert()
     {
@@ -327,14 +398,13 @@ private List<StationFacility> GetFacilitiesForSelectedFloor()
 
     private void GoBack()
     {
-        // 이전 페이지(아마도 역 선택)로 이동합니다.
-        Navigation.NavigateTo("/region"); // TODO: 실제 이전 페이지 경로로 수정해야 합니다.
+        Navigation.NavigateTo("/region");
     }
 
     private void StartNavigation()
     {
-        // '길찾기 시작' 버튼을 누르면 출발지 선택 페이지로 이동합니다.
-        Navigation.NavigateTo("/departure");
+        Navigation.NavigateTo($"/departure-selection/{StationId}");
     }
 }
+
 

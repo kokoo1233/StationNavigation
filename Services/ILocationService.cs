@@ -9,5 +9,7 @@ namespace StationNavigation.Services
     public interface ILocationService
     {
         Task<List<Location>> GetAllActiveLocationsAsync();
+
+	Task<List<Location>> GetActiveLocationsByStationIdAsync(int stationId);
     }
 }

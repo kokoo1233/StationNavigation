@@ -17,6 +17,14 @@ namespace StationNavigation.Services
         {
             _contextFactory = contextFactory;
         }
+	
+	public async Task<List<Location>> GetActiveLocationsByStationIdAsync(int stationId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            return await context.Locations
+                                .Where(l => l.IsActive && l.StationId == stationId)
+                                .ToListAsync();
+        }
 
         public async Task<List<Location>> GetAllActiveLocationsAsync()
         {

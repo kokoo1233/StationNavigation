@@ -4,10 +4,11 @@
 <PageTitle>지역 선택 - 대전역 길찾기</PageTitle>
 
 <div class="region-container">
-    <div class="region-header">
-        <button class="back-btn" @onclick="GoBack">
+
+        <button class="unified-back-button" @onclick="GoBack">
             ← 뒤로
         </button>
+    <div class ="region-header">
         <h1>지역을 선택해 주세요</h1>
     </div>
 
@@ -97,26 +98,33 @@
         font-family: 'Noto Sans KR', sans-serif;
     }
 
-    .region-header {
-        padding: 20px;
-        color: white;
-        position: relative;
-    }
-
-    .back-btn {
+    .unified-back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
         background: rgba(255, 255, 255, 0.2);
         color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 15px;
+        border-radius: 25px;
         cursor: pointer;
         font-size: 1rem;
-        margin-bottom: 20px;
-        transition: background-color 0.3s ease;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        z-index: 10;
     }
 
-    .back-btn:hover {
+    .unified-back-button:hover {
         background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-1px);
+    }
+
+    .region-header {
+        padding: 60px 20px 20px;
+        color: white;
+        position: relative;
     }
 
     .region-header h1 {
@@ -124,6 +132,7 @@
         margin: 0;
         text-align: center;
         font-weight: 700;
+        margin-top: 10px;
     }
 
     .region-content {
@@ -272,8 +281,20 @@
 
     /* 모바일 반응형 */
     @@media (max-width: 768px) {
+        .region-header {
+            padding: 50px 15px 15px;
+        }
+        
         .region-header h1 {
             font-size: 1.7rem;
+            margin-top: 5px;
+        }
+        
+        .unified-back-button {
+            top: 15px;
+            left: 15px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
         }
 
         .station-list {
@@ -296,7 +317,7 @@
         }
 
         .region-header {
-            padding: 15px;
+            padding: 45px 15px 15px;
         }
 
         .region-content {

@@ -1,0 +1,30 @@
+.unified-back-button,
+.unified-back-button:hover {
+    /* --- 크기 및 위치 강제 지정 --- */
+    width: 81.92px !important;
+    height: 40px !important;
+    padding: 0 !important; /* 고정 크기를 위해 패딩 초기화 */
+    position: absolute !important;
+    top: 20px !important;
+    left: 20px !important;
+
+    /* --- 내용물 중앙 정렬 --- */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* --- 나머지 디자인 --- */
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    z-index: 10;
+}
+
+.unified-back-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
